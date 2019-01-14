@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EDITAR USUARIO| Cliente Alumni CEV</title>
+
+	<meta charset="utf-8">
+
+	<!-- BOOTSTRAP -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<!-- jQuery library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+
+	<!-- Archivo js de configuración -->
+	<script type="text/javascript" src="config.js"></script>
+
+	<script>
+
+	if(sessionStorage.getItem('token') != null || sessionStorage.getItem('idUser') != null){
+		var token = sessionStorage.getItem('token');
+		var idUser = sessionStorage.getItem('idUser');
+	}else{
+		window.location.href="index.html";
+	}
+
+	var title = "";
+	var artist = "";
+	var url = "";
+
+	var groups = "";
+	var userGroups = "";
+
+	$.ajax({
+		    url: URL + "groups/groups.json",
+		    type: "GET",
+		    headers: { 'Authorization': token },
+		    dataType: 'json',
+		    success:function(response){
+		    	groups = response.data.groups;
+
+            }    
+        });
+
+	$("#result").hide();
+
+	$(document).ready(function() {
+
+		
+
+		$.ajax({
+		    url: URL + "users/userbyid.json",
+		    type: "GET",
+		    headers: { 'Authorization': token },
+		    data: {
+		    	'id': idUser
+		    },
+		    dataType: 'json',
+		    success:function(response){
+
+		    	var imgRegistered = response.data.user.is_registered == 1 ? "<img width='30' src='img/success.png'/>" : "<img width='30' src='img/error.png'/>";
+
+		    	var selectRol = "<div class='input-group text-center col-md-12'><select class='custom-select' id='selectRol'><option selected>Elegir rol...</option><option value='1'>Admin</option><option value='2'>Profesor</option><option value='3'>Alumno</option></select><div class='input-group-append'><label class='input-group-text' for='inputGroupSelect02'>Roles</label></div></div>";
+
+		    	var selectGroups = "<div class='input-group text-center col-md-12'><select class='custom-select' id='selectGroups'><option selected>Elegir grupo...</option></select><button id='btnAddGroup' onclick='addGroup()' class='ml-3 btn btn-info'>Añadir a grupo</button></div>";
+
+                $("#tableBody").append("<tr><th class='text-center' scope='row'>Nombre de usuario</th><td class='text-center'>"+ response.data.user.username +"</td></tr>");
+                $("#tableBody").append("<tr><th class='text-center' scope='row'>Nombre</th><td class='text-center'>"+ response.data.user.name +"</td></tr>");
+                $("#tableBody").append("<tr><th class='text-center' scope='row'>Registrado</th><td class='text-center'>"+ imgRegistered +"</td></tr>");
+                $("#tableBody").append("<tr><th class='text-center' scope='row'>Rol</th><td class='text-center'>"+ selectRol +"</td></tr>");
+
+               	$("#tableBody").append("<tr><th class='text-center' scope='row'>Añadir a grupo</th><td class='text-center'>"+ selectGroups +"</td></tr>");
+
+                $("#selectRol").val(response.data.user.id_rol);
+
+            	getGroupsUser();
+
+            }    
+        });
+
+        $("#edit").click(function() {
+	  		var idRol = $("#selectRol").val();
+
+	  		if(idRol != "1" && idRol != "2" && idRol != "3"){
+	  			$("#resultError").show();
+				$("#resultError").html("Es necesario que selecciones un rol para el usuario.");
+	  		}else{
+	  			var alert = confirm("¿Quieres confirmar los cambios?");
+			    if (alert == true) {
+
+			        $.ajax({
+					    url: URL + "users/update.json",
+					    type: "POST",
+					    data: {
+					    	'id': idUser,
+					    	'id_rol': idRol,
+					    },
+					    headers: { 'Authorization': token },
+					    dataType: 'json',
+					    success:function(response){
+
+					    	if(response.code == 200){
+					    		backToUsers();
+					    	}else{
+								$("#resultSuccess").hide();
+					    		$("#resultError").show();
+					    		$("#resultError").html("Error. No se han podido guardar los cambios.");
+					    	}
+
+			            }    
+		        	});
+		    	}
+	  		}
+			
+			
+
+		});
+    	
+	});
+
+	function addGroup(){
+
+		var idGroup = $("#selectGroups").val();
+
+		if(idGroup == "Elegir grupo..."){
+			$("#resultError").show();
+			$("#resultError").html("Error. Es neceario seleccionar un grupo.");
+
+		}else{
+			$.ajax({
+			    url: URL + "groups/assign.json",
+			    type: "POST",
+			    headers: { 'Authorization': token },
+			    data: {
+			    	'id_user': idUser,
+			    	'id_group': idGroup
+			    },
+			    dataType: 'json',
+			    success:function(response){
+			    	$("#resultError").hide();
+			    	
+			    	getGroupsUser();
+
+	            }    
+        	});
+		}
+
+	}
+
+	function getGroupsUser(){
+		$.ajax({
+		    url: URL + "groups/groupsbyuserCliente.json",
+		    type: "GET",
+		    headers: { 'Authorization': token },
+		    data: {
+		    	'id_user': idUser
+		    },
+		    dataType: 'json',
+		    success:function(response){
+
+		    	$("#tableBodyGroups").html("");
+
+		    	userGroups = response.data.groups;
+
+		    	if(response.data.groups.length > 1){
+		    		$.each(response.data.groups, function(i, group) {
+			    		$("#tableBodyGroups").append("<tr><th class='text-center'>"+ group.name +"</th><td class='text-center'><button class='btn btn-outline-danger' onclick='exitGroup(" + group.id +")')>Eliminar del grupo</button></td></tr>");
+					});
+		    	}else{
+		    		$.each(response.data.groups, function(i, group) {
+			    		$("#tableBodyGroups").append("<tr><th class='text-center'>"+ group.name +"</th><td class='text-center'><button disabled class='btn btn-outline-danger' onclick='exitGroup(" + group.id +")')>Eliminar del grupo</button></td></tr>");
+					});
+		    	}
+
+				rechargeGroupsSelector();
+
+            }    
+        });
+	}
+
+	function rechargeGroupsSelector(){
+	
+		var groupsShowInSelector = groupsNotUser();
+
+		if (groupsShowInSelector.length > 0){
+			$("#selectGroups").html("<option selected>Elegir grupo...</option>");
+			$.each(groupsShowInSelector, function(i, group) {
+				
+				$("#selectGroups").append("<option value="+ group.id +">"+ group.name+"</option>");
+			});
+			$("#selectGroups").prop('disabled', false);
+			$("#btnAddGroup").prop('disabled', false);
+		}else{
+			$("#selectGroups").prop('disabled', true);
+			$("#btnAddGroup").prop('disabled', true);
+		}
+	
+	}
+
+	function groupsNotUser(){
+
+		var arrayGroups = [];
+
+		_.each(groups,function(objeto) {
+
+			var elemento_en_data2 = _.find(userGroups,objeto);
+
+			if(elemento_en_data2===undefined) {
+				arrayGroups.push(objeto);
+			}
+
+		});
+
+		return arrayGroups;
+	
+	}
+
+	function backToUsers(){
+		window.location.href = "welcome.html";
+	}
+
+	function exitGroup(id_group){
+		$.ajax({
+		    url: URL + "groups/unassign.json",
+		    type: "POST",
+		    headers: { 'Authorization': token },
+		    data: {
+		    	'id_user': idUser,
+		    	'id_group': id_group
+		    },
+		    dataType: 'json',
+		    success:function(response){
+
+		    	getGroupsUser();
+
+            }    
+        });
+
+	}
+
+	</script>
+
+</head>
+<body>
+
+	<div class="container text-center">
+
+		<br>
+
+		<h1>Modificar usuario</h1>
+
+		<div class="container">
+
+			<div class="text-center">
+				<h4>Editar la información de un usuario de la aplicación</h4>
+			</div>
+			
+		</div>
+
+		<div class="m-3" style="float:left">
+			<button class="btn btn-outline-secondary" onclick="backToUsers()">Volver a usuarios</button>
+		</div>
+
+		<hr>
+
+		<table class="table">
+			<thead class="thead-dark">
+			<tr>
+					<th class="text-left" scope="col">Editar usuario</th>
+					<th class="text-center" scope="col"></th>
+					<th class="text-center" scope="col"></th>
+					<th class="text-center" scope="col"></th>
+					<th class="text-center" scope="col"></th>
+				</tr>
+			</thead>
+			<tbody id="tableBody">
+				
+			</tbody>
+		</table>
+
+		<p id="resultError" class="alert alert-danger" style="display:none"></p>
+		<p id="resultSuccess" class="alert alert-success" style="display:none"></p>
+
+		<table class="table">
+			<thead class="thead-dark">
+			<tr>
+					<th class="text-center" scope="col">Grupos a los que pertenece el usuario</th>
+					<th class="text-center" scope="col"></th>
+
+				</tr>
+			</thead>
+			<tbody id="tableBodyGroups">
+				
+			</tbody>
+		</table>
+
+		<button class="btn btn-outline-primary mb-5" id="edit">Guardar cambios</button>
+        
+		
+
+	</div>
+
+</body>
+</html>

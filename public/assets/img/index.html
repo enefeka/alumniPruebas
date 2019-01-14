@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Login</title>
+	<meta charset="utf-8">
+
+	<!-- BOOTSTRAP -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<!-- jQuery library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+	<!-- Archivo js de configuración -->
+	<script type="text/javascript" src="config.js">
+	</script>
+
+	<link rel="stylesheet" href="spinnerstyle.css">
+
+	<script type="text/javascript">
+	
+	$(document).ready(function(){ 
+
+		$("#result").hide();
+
+		$("#submit").on("click",function(e){
+			var email = $("#email").val();
+            var name = $("#name").val();
+            var id_rol = $("#id_rol").val();
+			var password = $("#password").val();
+
+			if(email == "" || name == ""){
+				$("#result").show();
+				$("#result").html("Falta por rellenar alguno de los dos campos");
+			}else{
+				e.preventDefault();
+				$.get(URL + "users/login.json", 
+					{'email': email,
+					 'password': password}, 
+					function(response){
+
+						if(response.code == "200"){
+							sessionStorage.setItem('token', response.data.token);
+	            			window.location.href = "welcome.html";
+						}else{
+							$("#result").show();
+							$("#result").html("No estás autorizado.");
+						}
+	        		}
+	        	);
+			}
+
+	        
+		});
+	});
+	</script>
+
+</head>
+<body>
+
+	<div class="main container mt-5">
+
+		<h1>Login</h1>
+
+		<h4>Solo usuarios administradores</h4>
+
+		<hr>
+
+		<form class="form-inline col-12" id="formInsertUser">
+			<!-- Email -->
+			<div class="input-group col-md-4">
+
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="basic-addon1"><img width="20" src="img/email.png"/></span>
+				</div>
+
+				<input size="30" type="text" name="email" class="form-control" id="email" placeholder="Email" aria-label="Email" aria-describedby="basic-addon1">
+			</div>
+
+			<!-- Password -->
+			<div class="input-group col-md-4">
+
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="basic-addon1"><img width="20" src="img/key.png"/></span>
+				</div>
+
+				<input size="30" type="password" name="password" class="form-control" id="password" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1">
+			</div>
+
+			<input type="button" class="btn btn-primary" name="submit" value="Entrar" id="submit">
+		</form>
+
+		<br>
+
+		<p id="result" class="alert alert-danger" style="display:none"></p>
+
+	</div>
+
+</body>
+</html>

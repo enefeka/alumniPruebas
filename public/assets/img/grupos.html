@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+	<!-- BOOTSTRAP -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+	<!-- jQuery library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Archivo js de configuración -->
+    <script type="text/javascript" src="config.js"></script>
+    <link rel="stylesheet" href="spinnerstyle.css">
+
+    <script type="text/javascript">
+        
+    if(sessionStorage.getItem('token') != null){
+			var token = sessionStorage.getItem('token');
+		}else{
+			window.location.href="index.html";
+		}
+
+    
+	$(document).ready(function(){ 
+     listarGrupos();   
+    
+    
+    });  
+        
+        function listarGrupos(){
+		$.ajax({
+			    url: URL + "groups/groups.json",
+			    type: "GET",
+			    headers: { 'Authorization': token },
+			    dataType: 'json',
+			    success:function(response){
+
+                    console.log(response);
+                    
+                    $("#listaGroup").html("");
+                
+                    if($("#listaGroup").html() == ""){
+                    
+                        $.each(response.data.groups, function(i, group) { 
+                        
+                            $("#listaGroup").append("<li id='" + group.id + "'class='list-group-item'>" + group.name + " " + "<input type='button' name='delet' id='delet' onclick='deletGroup(" + group.id + ")' class='btn btn-outline-danger' value='Delete'>" + "</li>");
+
+                            $(".sk-circle").hide();
+                            
+                        })
+                    }
+                }    
+            });
+        }
+
+
+    function añadirGrupo(){    
+        var name = $("#name").val();
+        $.ajax({
+			    url: URL + "groups/create.json",
+			    type: "POST",
+                data: { 
+                    'name': name,
+			    },
+			    headers: { 'Authorization': token },
+			    dataType: 'json',
+			    success:function(response){    
+                 listarGrupos();
+                 $("#name").val("");
+                }    
+        });
+        
+    }
+    
+    function deletGroup(id){
+       
+        $.ajax({
+			    url: URL + "groups/delete.json",
+			    type: "POST",
+                data: { 
+                    'id': id,
+			    },
+			    headers: { 'Authorization': token },
+			    dataType: 'json',
+			    success:function(response){    
+                 listarGrupos();
+                }    
+        }); 
+    }
+
+    function GoUsers(){
+		window.location.href = "welcome.html";
+	}
+
+    function salir(){
+        sessionStorage.clear();
+        window.location.href = "index.html";
+    }
+    
+    </script>
+    <title>Groups</title>
+</head>
+<body>
+    <div class="groups main container">
+
+        <div class="col-12 row mt-3">
+            <ol class="breadcrumb col-10">
+                <li class="breadcrumb-item"><a href="welcome.html">Usuarios</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Grupos</li>
+                
+            </ol>
+            <div class="col-2">
+                <button type="button" class="btn navbar-btn btn-outline-danger" onclick="salir()">Salir / Cerrar sesión</button>
+            </div>
+        </div>
+
+        <h1 class="col-12">Grupos</h1>
+
+        <hr>
+
+        <h3 class="col-12">Añadir grupo</h3>
+
+        <!-- Name -->
+        <div class="input-group col-md-5">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1"><img width="20" src="img/group.png"/></span>
+            </div>
+
+            <input size="30" type="text" name="name" class="form-control" id="name" placeholder="Name" aria-label="Name" aria-describedby="basic-addon1">
+        </div>
+
+        <div class="input-group mt-3 col-md-3">
+            <button type="button" class="btn btn-outline-dark" onclick="añadirGrupo()">Crear</button>
+        </div>
+
+        <br>
+        <br>
+
+        <h3 class="col-12">Lista de grupos</h3>
+
+        <ul class="list-group" id="listaGroup"></ul>
+
+        <div class="sk-circle">
+            <div class="sk-circle1 sk-child"></div>
+            <div class="sk-circle2 sk-child"></div>
+            <div class="sk-circle3 sk-child"></div>
+            <div class="sk-circle4 sk-child"></div>
+            <div class="sk-circle5 sk-child"></div>
+            <div class="sk-circle6 sk-child"></div>
+            <div class="sk-circle7 sk-child"></div>
+            <div class="sk-circle8 sk-child"></div>
+            <div class="sk-circle9 sk-child"></div>
+            <div class="sk-circle10 sk-child"></div>
+            <div class="sk-circle11 sk-child"></div>
+            <div class="sk-circle12 sk-child"></div>
+        </div>
+
+        <br>
+        <br>
+        <br>
+
+    
+	</div>
+</body>
+</html>
